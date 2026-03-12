@@ -1,8 +1,8 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 export function Layout() {
-  const location = useLocation();
-  const isHome = location.pathname === '/';
+  // const location = useLocation();
+  // const isHome = location.pathname === '/';
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
