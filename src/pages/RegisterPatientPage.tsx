@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registerPatientFromForm } from '../store/patients';
+import { registerPatient } from '../api/patients';
 import { ageFromDob } from '../types/patient';
 
 const initialForm = {
@@ -18,6 +18,7 @@ export function RegisterPatientPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [videoReady, setVideoReady] = useState(false);
@@ -87,7 +88,7 @@ export function RegisterPatientPage() {
     stopCamera();
   }, [stopCamera]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
     if (!form.name.trim()) {
@@ -114,11 +115,24 @@ export function RegisterPatientPage() {
       setSubmitError('National ID is required.');
       return;
     }
-    const patient = registerPatientFromForm({
-      ...form,
-      age,
-    });
-    navigate(`/patient/${patient.id}`);
+    setSubmitting(true);
+    try {
+      const { id } = await registerPatient({
+        name: form.name.trim(),
+        date_of_birth: form.dateOfBirth,
+        age,
+        address: form.address.trim(),
+        town: form.town.trim(),
+        nationality: form.nationality.trim(),
+        national_id: form.nationalId.trim(),
+        image: form.image || undefined,
+      });
+      navigate(`/patient/${id}`);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Registration failed.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass = "w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20";
@@ -270,9 +284,10 @@ export function RegisterPatientPage() {
         <div className="flex gap-3 border-t border-slate-200 pt-4">
           <button
             type="submit"
-            className="rounded-lg bg-teal-600 px-5 py-2.5 font-medium text-white hover:bg-teal-700"
+            disabled={submitting}
+            className="rounded-lg bg-teal-600 px-5 py-2.5 font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
-            Register Patient
+            {submitting ? 'Registering…' : 'Register Patient'}
           </button>
           <button
             type="button"

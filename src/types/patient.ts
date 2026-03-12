@@ -23,7 +23,13 @@ export type PatientFormData = Omit<Patient, 'id' | 'bmi' | 'createdAt' | 'update
   image?: string;
 };
 
-export function computeBmi(weightKg: number, heightM: number): number {
+/**
+ * BMI = weight (kg) / [height (m)]²
+ * Height can be in meters (e.g. 1.75) or cm (e.g. 175); values > 10 are treated as cm.
+ */
+export function computeBmi(weightKg: number, heightMOrCm: number): number {
+  if (!weightKg || weightKg <= 0) return 0;
+  const heightM = heightMOrCm > 10 ? heightMOrCm / 100 : heightMOrCm;
   if (!heightM || heightM <= 0) return 0;
   const bmi = weightKg / (heightM * heightM);
   return Math.round(bmi * 100) / 100;

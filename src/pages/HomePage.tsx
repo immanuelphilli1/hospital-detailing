@@ -1,10 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { searchPatients } from '../store/patients';
+import { fetchPatients } from '../api/patients';
+import { LoaderPage } from '../components/Loader';
 import type { Patient } from '../types/patient';
 
-const DEFAULT_CARD_IMAGE =
-  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=800&auto=format&fit=crop';
+/** Default avatar when patient has no image */
+const PLACEHOLDER_AVATAR =
+  'https://ui-avatars.com/api/?name=Patient&size=800&background=94a3b8&color=fff&bold=true';
+
+const STORAGE_BASE = 'https://immanuel.fasthosttech.com/storage';
 
 function cn(...classes: (string | boolean | undefined)[]): string {
   return classes.filter(Boolean).join(' ');
@@ -21,7 +25,11 @@ const PatientCard = ({
   hovered: number | null;
   setHovered: React.Dispatch<React.SetStateAction<number | null>>;
 }) => {
-  const src = patient.image || DEFAULT_CARD_IMAGE;
+  const imageUrl = !patient.image
+    ? PLACEHOLDER_AVATAR
+    : patient.image.startsWith('http')
+      ? patient.image
+      : `${STORAGE_BASE}/${patient.image.replace(/^\//, '')}`;
 
   return (
     <Link
@@ -34,7 +42,7 @@ const PatientCard = ({
       )}
     >
       <img
-        src={src}
+        src={imageUrl}
         alt={patient.name}
         className="absolute inset-0 h-full w-full object-cover"
       />
@@ -78,16 +86,47 @@ function PatientFocusCards({ patients }: { patients: Patient[] }) {
   );
 }
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function HomePage() {
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const results = useMemo(() => {
-    return searchPatients(query);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (query.trim() === '') {
+      setResults([]);
+      setError('');
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      setLoading(true);
+      setError('');
+      fetchPatients(query)
+        .then(setResults)
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Search failed');
+          setResults([]);
+        })
+        .finally(() => {
+          setLoading(false);
+          debounceRef.current = null;
+        });
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search runs on query; form submit keeps accessibility and enter-to-search
+    // Search runs via useEffect when query changes; submit keeps accessibility
   };
 
   return (
@@ -115,20 +154,23 @@ export function HomePage() {
 
       <section>
         {query === '' ? (
-          <p className="text-slate-500">Type a patient name to see results. if new patient,<Link
-          to="/register"
-          className="rounded-lg text-teal-600 px-4 py-2 text-sm font-medium underline hover:text-teal-900"
-        >
-          Register Patient
-        </Link></p>
+          <p className="text-slate-500">
+            Type a patient name, town, or national ID to search.{' '}
+            <Link to="/register" className="text-teal-600 font-medium underline hover:text-teal-900">
+              Register Patient
+            </Link>
+          </p>
+        ) : loading ? (
+          <LoaderPage label="Searching…" />
+        ) : error ? (
+          <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">{error}</p>
         ) : results.length === 0 ? (
           <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
-            No patients found for &quot;{query}&quot;. if new patient,<Link
-          to="/register"
-          className="rounded-lg text-teal-600 px-4 py-2 text-sm font-medium underline hover:text-teal-900"
-        >
-          Register Patient
-        </Link></p>
+            No patients found for &quot;{query}&quot;.{' '}
+            <Link to="/register" className="text-teal-600 font-medium underline hover:text-teal-900">
+              Register Patient
+            </Link>
+          </p>
         ) : (
           <PatientFocusCards patients={results} />
         )}

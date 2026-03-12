@@ -1,9 +1,10 @@
 import * as XLSX from 'xlsx';
 import type { Patient } from '../types/patient';
+import { formatDateOnly } from './date';
 
 const patientToRow = (p: Patient) => ({
   Name: p.name,
-  'Date of Birth': p.dateOfBirth,
+  'Date of Birth': formatDateOnly(p.dateOfBirth),
   Age: p.age,
   Address: p.address,
   Town: p.town,

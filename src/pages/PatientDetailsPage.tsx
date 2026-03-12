@@ -1,70 +1,100 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPatientById, updatePatient } from '../store/patients';
+import { fetchPatient, updatePatientApi } from '../api/patients';
+import { LoaderPage } from '../components/Loader';
 import { computeBmi, type Patient } from '../types/patient';
-import { exportPatientToExcel } from '../utils/exportExcel';
+import { formatDateOnly } from '../utils/date';
+// import { exportPatientToExcel } from '../utils/exportExcel';
 
-const placeholderImage = 'data:image/svg+xml,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><circle cx="12" cy="8" r="3"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>'
-);
+const placeholderImage = 'https://ui-avatars.com/api/?name=Patient&size=800&background=94a3b8&color=fff&bold=true';
 
 export function PatientDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [patient, setPatient] = useState(getPatientById(id ?? ''));
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [form, setForm] = useState<Patient | null>(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(patient ? { ...patient } : null);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const p = getPatientById(id ?? '');
-    setPatient(p ?? undefined);
-    setForm(p ? { ...p } : null);
+    const patientId = id ?? '';
+    if (!patientId) {
+      setLoading(false);
+      setError('Invalid patient id');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    fetchPatient(patientId)
+      .then((p) => {
+        setPatient(p);
+        setForm({ ...p });
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load patient');
+        setPatient(null);
+        setForm(null);
+      })
+      .finally(() => setLoading(false));
   }, [id]);
 
-  useEffect(() => {
-    if (!form) return;
-    const bmi = computeBmi(form.weight, form.height);
-    setForm((f) => (f ? { ...f, bmi } : null));
-  }, [form?.height, form?.weight]);
-
-  if (!patient) {
+  if (loading) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-800">
-        Patient not found. <button type="button" onClick={() => navigate('/')} className="underline">Back to search</button>
+      <div className="rounded-lg border border-slate-200 bg-white p-8">
+        <LoaderPage label="Loading patient…" />
       </div>
     );
   }
 
-  const handleSave = () => {
+  if (error || !patient) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-800">
+        {error || 'Patient not found.'}{' '}
+        <button type="button" onClick={() => navigate('/')} className="underline">
+          Back to search
+        </button>
+      </div>
+    );
+  }
+
+  const display = editing && form ? form : patient;
+  /** BMI derived from current height & weight so it updates immediately when they change */
+  const displayBmi = display ? computeBmi(display.weight, display.height) : 0;
+
+  const handleSave = async () => {
     if (!form || !id) return;
-    const updated = updatePatient(id, {
-      dateOfBirth: form.dateOfBirth,
-      address: form.address,
-      town: form.town,
-      bp: form.bp,
-      p: form.p,
-      height: form.height,
-      weight: form.weight,
-      fbs: form.fbs,
-      psa: form.psa,
-      nationality: form.nationality,
-      nationalId: form.nationalId,
-    });
-    if (updated) {
+    setSaving(true);
+    setError('');
+    try {
+      const updated = await updatePatientApi(id, {
+        date_of_birth: form.dateOfBirth,
+        address: form.address,
+        town: form.town,
+        bp: form.bp,
+        p: form.p,
+        height: form.height,
+        weight: form.weight,
+        bmi: displayBmi,
+        fbs: form.fbs,
+        psa: form.psa,
+        nationality: form.nationality,
+        national_id: form.nationalId,
+      });
       setPatient(updated);
       setForm({ ...updated });
       setEditing(false);
+      setError('');
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setSaving(false);
     }
   };
-
-  const handleExport = () => {
-    exportPatientToExcel(patient);
-  };
-
-  const display = editing && form ? form : patient;
 
   type FieldKey = keyof Pick<Patient, 'dateOfBirth' | 'address' | 'town' | 'bp' | 'p' | 'height' | 'weight' | 'fbs' | 'psa' | 'nationality' | 'nationalId'>;
   const field = (label: string, key: FieldKey | 'name' | 'age' | 'bmi', value: string | number, editable?: boolean, type: string = 'text') => {
@@ -104,6 +134,13 @@ export function PatientDetailsPage() {
           ← Back to Search
         </button>
         <div className="flex gap-2">
+          {/* <button
+            type="button"
+            onClick={handleExport}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Export to Excel
+          </button> */}
           {!editing ? (
             <button
               type="button"
@@ -116,7 +153,7 @@ export function PatientDetailsPage() {
             <>
               <button
                 type="button"
-                onClick={() => { setForm({ ...patient }); setEditing(false); }}
+                onClick={() => { setForm({ ...patient }); setEditing(false); setError(''); }}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 Cancel
@@ -124,9 +161,10 @@ export function PatientDetailsPage() {
               <button
                 type="button"
                 onClick={handleSave}
-                className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+                disabled={saving}
+                className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
               >
-                Save changes
+                {saving ? 'Saving…' : 'Save changes'}
               </button>
             </>
           )}
@@ -138,13 +176,18 @@ export function PatientDetailsPage() {
           Changes saved successfully.
         </p>
       )}
+      {error && patient && (
+        <p className="rounded-lg bg-red-100 py-2 text-center text-sm text-red-800">
+          {error}
+        </p>
+      )}
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="grid gap-6 p-6 sm:grid-cols-[auto_1fr]">
           <div className="flex flex-col items-center gap-2">
             <div className="h-32 md:h-100 w-32 md:w-100 overflow-hidden rounded-lg bg-slate-100">
               {display.image ? (
-                <img src={display.image} alt={display.name} className="h-full w-full object-cover" />
+                <img src={`https://immanuel.fasthosttech.com/storage/${display.image}`} alt={display.name} className="h-full w-full object-cover" />
               ) : (
                 <img src={placeholderImage} alt="" className="h-full w-full opacity-60" />
               )}
@@ -153,7 +196,7 @@ export function PatientDetailsPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {field('Name', 'name', display.name, false)}
-            {field('Date of Birth', 'dateOfBirth', display.dateOfBirth, true)}
+            {field('Date of Birth', 'dateOfBirth', formatDateOnly(display.dateOfBirth), false)}
             {field('Age', 'age', display.age, false)}
             {field('Address / Digital Address', 'address', display.address, true)}
             {field('Town', 'town', display.town, true)}
@@ -161,7 +204,7 @@ export function PatientDetailsPage() {
             {field('P', 'p', display.p, true)}
             {field('Height (m)', 'height', display.height, true, 'number')}
             {field('Weight (kg)', 'weight', display.weight, true, 'number')}
-            {field('BMI', 'bmi', display.bmi, false)}
+            {field('BMI', 'bmi', displayBmi, false)}
             {field('FBS', 'fbs', display.fbs, true)}
             {field('PSA', 'psa', display.psa, true)}
             {field('Nationality', 'nationality', display.nationality, true)}

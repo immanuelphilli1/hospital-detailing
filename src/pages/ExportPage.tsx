@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllPatients, searchPatients } from '../store/patients';
+import { fetchPatients } from '../api/patients';
+import { LoaderPage } from '../components/Loader';
 import { exportAllPatientsToExcel, exportPatientToExcel } from '../utils/exportExcel';
 import type { Patient } from '../types/patient';
 
@@ -8,15 +9,45 @@ const placeholderImage = 'data:image/svg+xml,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><circle cx="12" cy="8" r="3"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>'
 );
 
+function filterPatients(patients: Patient[], query: string): Patient[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return patients;
+  return patients.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.nationalId.toLowerCase().includes(q) ||
+      p.town.toLowerCase().includes(q)
+  );
+}
+
 export function ExportPage() {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const patients = query.trim() ? searchPatients(query) : getAllPatients();
   const [exporting, setExporting] = useState(false);
+
+  const filteredPatients = useMemo(
+    () => filterPatients(patients, query),
+    [patients, query]
+  );
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    fetchPatients()
+      .then(setPatients)
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load patients');
+        setPatients([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleExportAll = () => {
     setExporting(true);
     try {
-      exportAllPatientsToExcel(patients);
+      exportAllPatientsToExcel(filteredPatients);
     } finally {
       setExporting(false);
     }
@@ -25,6 +56,34 @@ export function ExportPage() {
   const handleExportOne = (patient: Patient) => {
     exportPatientToExcel(patient);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Export Data</h1>
+          <p className="mt-1 text-slate-600">Export single patient or entire database to Excel (.xlsx).</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-8">
+          <LoaderPage label="Loading patients…" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Export Data</h1>
+          <p className="mt-1 text-slate-600">Export single patient or entire database to Excel (.xlsx).</p>
+        </div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -44,16 +103,20 @@ export function ExportPage() {
         <button
           type="button"
           onClick={handleExportAll}
-          disabled={exporting || patients.length === 0}
+          disabled={exporting || filteredPatients.length === 0}
           className="rounded-lg bg-teal-600 px-5 py-2 font-medium text-white hover:bg-teal-700 disabled:opacity-50"
         >
-          {exporting ? 'Exporting…' : `Export all (${patients.length}) to Excel`}
+          {exporting ? 'Exporting…' : `Export all (${filteredPatients.length}) to Excel`}
         </button>
       </div>
 
-      {patients.length === 0 ? (
+      {filteredPatients.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
-          No patients to export. <Link to="/register" className="text-teal-600 hover:underline">Register a patient</Link> first.
+          {patients.length === 0
+            ? 'No patients to export. '
+            : 'No patients match the filter. '}
+          <Link to="/register" className="text-teal-600 hover:underline">Register a patient</Link>
+          {patients.length > 0 ? ' or clear the filter.' : ' first.'}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -70,12 +133,12 @@ export function ExportPage() {
                 </tr>
               </thead>
               <tbody>
-                {patients.map((p) => (
+                {filteredPatients.map((p) => (
                   <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="p-3">
                       <div className="h-10 w-10 overflow-hidden rounded bg-slate-100">
                         {p.image ? (
-                          <img src={p.image} alt="" className="h-full w-full object-cover" />
+                          <img src={`https://immanuel.fasthosttech.com/storage/${p.image}`} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <img src={placeholderImage} alt="" className="h-full w-full opacity-60" />
                         )}
