@@ -173,6 +173,7 @@ export function RegisterPatientPage() {
               type="date"
               value={form.dateOfBirth}
               onChange={(e) => setForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
+              max={new Date().toISOString().slice(0, 10)}
               className={inputClass}
               required
             />
