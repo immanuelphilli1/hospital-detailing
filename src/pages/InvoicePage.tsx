@@ -298,7 +298,7 @@ export function InvoicePage() {
               )}
             </p>
 
-            <ul className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto">
+            <ul className="mt-3 max-h-112 space-y-2 overflow-y-auto">
               {dayInvoices.length === 0 ? (
                 <li className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-400">
                   No invoices for this day

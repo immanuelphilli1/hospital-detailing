@@ -61,7 +61,7 @@ export function InvoiceDocument({
         </h2>
         <div className="mt-1 flex items-baseline justify-center gap-1 font-invoice text-sm sm:absolute sm:right-0 sm:bottom-0 sm:mt-0">
           <span>№</span>
-          <span className="min-w-[5.5rem] border-b border-dotted border-black px-1 font-ink text-base text-[#1a3a8a]">
+          <span className="min-w-22 border-b border-dotted border-black px-1 font-ink text-base text-[#1a3a8a]">
             {invoiceNumber || '_______'}
           </span>
         </div>
@@ -71,7 +71,7 @@ export function InvoiceDocument({
         <FieldLine label="Customer's Name" value={customerName} />
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
           <FieldLine label="Address" value={address} />
-          <div className="flex min-w-[9rem] items-end gap-2">
+          <div className="flex min-w-36 items-end gap-2">
             <span className="shrink-0">Date</span>
             <span className="flex-1 border-b border-dotted border-black px-1 font-ink text-base text-[#1a3a8a]">
               {date ? formatDisplayDate(date) : '\u00a0'}
@@ -159,7 +159,7 @@ export function InvoiceDocument({
           <div className="flex items-center border-r-2 border-black bg-[#f0ebe0] px-3 font-invoice text-sm font-bold">
             TOTAL ₵
           </div>
-          <div className="flex min-w-[9rem]">
+          <div className="flex min-w-36">
             <span className="flex-1 border-r border-double border-black bg-[#eceae0] px-2 py-1.5 text-right font-ink text-base text-[#1a3a8a]">
               {total > 0 ? totalWhole : ''}
             </span>
@@ -182,7 +182,7 @@ export function InvoiceDocument({
             <img
               src={marySign}
               alt="Manager signature"
-              className="pointer-events-none absolute bottom-0.5 left-20 h-10 w-auto max-w-full object-contain object-left-bottom sm:h-12"
+              className="pointer-events-none absolute bottom-0.5 left-20 h-10 w-auto max-w-full object-contain object-bottom-left sm:h-12"
             />
             <div className="w-full border-b border-dotted border-black" />
           </div>
@@ -197,7 +197,7 @@ function FieldLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-end gap-2">
       <span className="shrink-0">{label}</span>
-      <span className="min-h-[1.25rem] flex-1 border-b border-dotted border-black px-1 font-ink text-base text-[#1a3a8a]">
+      <span className="min-h-5 flex-1 border-b border-dotted border-black px-1 font-ink text-base text-[#1a3a8a]">
         {value || '\u00a0'}
       </span>
     </div>
