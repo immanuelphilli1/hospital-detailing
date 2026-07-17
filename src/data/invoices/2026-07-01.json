@@ -78,6 +78,30 @@
       ],
       "total": 1,
       "createdAt": "2026-07-17T13:17:04.191Z"
+    },
+    {
+      "id": "inv-1784297429402-0yyx2v",
+      "invoiceNumber": "0000132",
+      "customerName": "Ako",
+      "address": "At 115",
+      "lpoNo": "",
+      "date": "2026-07-01",
+      "items": [
+        {
+          "qty": "1",
+          "description": "bumper",
+          "unitPrice": 2,
+          "amount": 50
+        },
+        {
+          "qty": "",
+          "description": "side mirror",
+          "unitPrice": 4,
+          "amount": 200
+        }
+      ],
+      "total": 250,
+      "createdAt": "2026-07-17T14:10:29.403Z"
     }
   ]
 }
