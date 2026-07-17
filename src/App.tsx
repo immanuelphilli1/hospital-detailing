@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage';
 import { PatientDetailsPage } from './pages/PatientDetailsPage';
 import { RegisterPatientPage } from './pages/RegisterPatientPage';
 import { ExportPage } from './pages/ExportPage';
+import { InvoicePage } from './pages/InvoicePage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="patient/:id" element={<PatientDetailsPage />} />
           <Route path="register" element={<RegisterPatientPage />} />
           <Route path="export" element={<ExportPage />} />
+          <Route path="invoice" element={<InvoicePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,0 +1,29 @@
+{
+  "date": "2026-07-17",
+  "invoices": [
+    {
+      "id": "inv-1784287179053-wp9yva",
+      "invoiceNumber": "0000130",
+      "customerName": "Test Car",
+      "address": "GE-123",
+      "lpoNo": "",
+      "date": "2026-07-17",
+      "items": [
+        {
+          "qty": "",
+          "description": "Paint",
+          "unitPrice": null,
+          "amount": 500
+        },
+        {
+          "qty": "",
+          "description": "Labour",
+          "unitPrice": null,
+          "amount": 200
+        }
+      ],
+      "total": 700,
+      "createdAt": "2026-07-17T11:19:39.053Z"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "date": "2026-07-01",
+  "invoices": [
+    {
+      "id": "inv-sample-0000129",
+      "invoiceNumber": "0000129",
+      "customerName": "RAV4 Hybrid",
+      "address": "GE 823D-25",
+      "lpoNo": "",
+      "date": "2026-07-01",
+      "items": [
+        { "qty": "", "description": "Head Light", "unitPrice": null, "amount": 3800 },
+        { "qty": "", "description": "Bumper", "unitPrice": null, "amount": 3500 },
+        { "qty": "", "description": "fog light", "unitPrice": null, "amount": 350 },
+        { "qty": "", "description": "1 set of Paint", "unitPrice": null, "amount": 1335 },
+        { "qty": "", "description": "Spraying, Body Prepare and Workmanship", "unitPrice": null, "amount": 800 },
+        { "qty": "", "description": "Air cleaner Repairs", "unitPrice": null, "amount": 500 },
+        { "qty": "", "description": "Straighten Work", "unitPrice": null, "amount": 1500 },
+        { "qty": "", "description": "Electrical Work", "unitPrice": null, "amount": 500 }
+      ],
+      "total": 12285,
+      "createdAt": "2026-07-01T10:18:00.000Z"
+    }
+  ]
+}

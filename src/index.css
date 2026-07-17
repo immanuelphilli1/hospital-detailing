@@ -2,10 +2,51 @@
 
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-invoice: "Libre Baskerville", "Times New Roman", serif;
+  --font-ink: "Caveat", cursive;
 }
 
 body {
   font-family: var(--font-sans);
+}
+
+.font-invoice {
+  font-family: var(--font-invoice);
+}
+
+.font-ink {
+  font-family: var(--font-ink);
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #invoice-print-area,
+  #invoice-print-area * {
+    visibility: visible;
+  }
+
+  #invoice-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .invoice-sheet {
+    box-shadow: none !important;
+    max-width: none !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
 }
 
 @keyframes loaderAnim {

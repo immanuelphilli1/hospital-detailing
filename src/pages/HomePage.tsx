@@ -159,6 +159,10 @@ export function HomePage() {
             <Link to="/register" className="text-teal-600 font-medium underline hover:text-teal-900">
               Register Patient
             </Link>
+            {' · '}
+            <Link to="/invoice" className="text-teal-600 font-medium underline hover:text-teal-900">
+              Invoices
+            </Link>
           </p>
         ) : loading ? (
           <LoaderPage label="Searching…" />
