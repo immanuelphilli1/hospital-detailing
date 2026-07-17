@@ -9,17 +9,75 @@
       "lpoNo": "",
       "date": "2026-07-01",
       "items": [
-        { "qty": "", "description": "Head Light", "unitPrice": null, "amount": 3800 },
-        { "qty": "", "description": "Bumper", "unitPrice": null, "amount": 3500 },
-        { "qty": "", "description": "fog light", "unitPrice": null, "amount": 350 },
-        { "qty": "", "description": "1 set of Paint", "unitPrice": null, "amount": 1335 },
-        { "qty": "", "description": "Spraying, Body Prepare and Workmanship", "unitPrice": null, "amount": 800 },
-        { "qty": "", "description": "Air cleaner Repairs", "unitPrice": null, "amount": 500 },
-        { "qty": "", "description": "Straighten Work", "unitPrice": null, "amount": 1500 },
-        { "qty": "", "description": "Electrical Work", "unitPrice": null, "amount": 500 }
+        {
+          "qty": "",
+          "description": "Head Light",
+          "unitPrice": null,
+          "amount": 3800
+        },
+        {
+          "qty": "",
+          "description": "Bumper",
+          "unitPrice": null,
+          "amount": 3500
+        },
+        {
+          "qty": "",
+          "description": "fog light",
+          "unitPrice": null,
+          "amount": 350
+        },
+        {
+          "qty": "",
+          "description": "1 set of Paint",
+          "unitPrice": null,
+          "amount": 1335
+        },
+        {
+          "qty": "",
+          "description": "Spraying, Body Prepare and Workmanship",
+          "unitPrice": null,
+          "amount": 800
+        },
+        {
+          "qty": "",
+          "description": "Air cleaner Repairs",
+          "unitPrice": null,
+          "amount": 500
+        },
+        {
+          "qty": "",
+          "description": "Straighten Work",
+          "unitPrice": null,
+          "amount": 1500
+        },
+        {
+          "qty": "",
+          "description": "Electrical Work",
+          "unitPrice": null,
+          "amount": 500
+        }
       ],
       "total": 12285,
       "createdAt": "2026-07-01T10:18:00.000Z"
+    },
+    {
+      "id": "inv-1784294224191-3jyksf",
+      "invoiceNumber": "0000131",
+      "customerName": "test",
+      "address": "test",
+      "lpoNo": "",
+      "date": "2026-07-01",
+      "items": [
+        {
+          "qty": "1",
+          "description": "test",
+          "unitPrice": 4,
+          "amount": 1
+        }
+      ],
+      "total": 1,
+      "createdAt": "2026-07-17T13:17:04.191Z"
     }
   ]
 }
