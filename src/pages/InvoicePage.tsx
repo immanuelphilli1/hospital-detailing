@@ -293,7 +293,7 @@ export function InvoicePage() {
               {formatDisplayDate(selectedDay)}
               {days.length > 0 && (
                 <span className="block mt-0.5">
-                  Stored under <code className="text-[0.7rem]">data/invoices/{selectedDay}.json</code>
+                  Stored under <code className="text-[0.7rem]">src/data/invoices/{selectedDay}.json</code>
                 </span>
               )}
             </p>

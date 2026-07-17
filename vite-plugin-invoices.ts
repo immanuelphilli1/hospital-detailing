@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Connect, Plugin, PreviewServer, ViteDevServer } from 'vite';
 
-const DATA_DIR = path.resolve(process.cwd(), 'data/invoices');
+const DATA_DIR = path.resolve(process.cwd(), 'src/data/invoices');
 const META_PATH = path.join(DATA_DIR, 'meta.json');
 
 const DEFAULT_META = {
