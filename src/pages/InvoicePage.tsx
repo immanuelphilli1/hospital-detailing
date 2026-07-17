@@ -51,7 +51,7 @@ export function InvoicePage() {
 
   const loadDay = useCallback(async (date: string) => {
     const day = await fetchDayInvoices(date);
-    setDayInvoices(day.invoices);
+    setDayInvoices(JSON.parse(JSON.stringify(day.invoices)));
   }, []);
 
   useEffect(() => {
