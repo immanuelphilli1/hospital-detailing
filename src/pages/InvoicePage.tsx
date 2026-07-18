@@ -170,10 +170,7 @@ export function InvoicePage() {
   };
 
   const getInvoiceSheet = (): HTMLElement | null => {
-    return (
-      document.querySelector<HTMLElement>('#invoice-print-area .invoice-sheet') ??
-      document.querySelector<HTMLElement>('#invoice-print-area')
-    );
+    return document.querySelector<HTMLElement>('#invoice-print-area');
   };
 
   const handleWhatsApp = async (invoice?: Invoice) => {

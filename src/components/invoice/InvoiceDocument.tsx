@@ -16,6 +16,16 @@ function padItems(items: InvoiceItem[]): Array<InvoiceItem | null> {
   return rows.slice(0, ROW_COUNT);
 }
 
+/** Split line items into pages of ROW_COUNT */
+function chunkItems(items: InvoiceItem[]): InvoiceItem[][] {
+  if (items.length === 0) return [[]];
+  const pages: InvoiceItem[][] = [];
+  for (let i = 0; i < items.length; i += ROW_COUNT) {
+    pages.push(items.slice(i, i + ROW_COUNT));
+  }
+  return pages;
+}
+
 interface InvoiceDocumentProps {
   company: InvoiceMeta['company'];
   invoiceNumber: string;
@@ -39,12 +49,73 @@ export function InvoiceDocument({
   total,
   showTotalStamp = true,
 }: InvoiceDocumentProps) {
-  const rows = padItems(items.filter((i) => i.description.trim() || i.amount));
+  const filled = items.filter((i) => i.description.trim() || i.amount);
+  const pages = chunkItems(filled);
+  const multiPage = pages.length > 1;
+
+  return (
+    <div className="invoice-document mx-auto flex w-full max-w-[720px] flex-col gap-6">
+      {pages.map((pageItems, pageIndex) => {
+        const isLast = pageIndex === pages.length - 1;
+        return (
+          <InvoiceSheet
+            key={pageIndex}
+            company={company}
+            invoiceNumber={invoiceNumber}
+            customerName={customerName}
+            address={address}
+            lpoNo={lpoNo}
+            date={date}
+            pageItems={pageItems}
+            total={total}
+            showTotals={isLast}
+            showTotalStamp={isLast && showTotalStamp}
+            showPto={multiPage && !isLast}
+            pageLabel={
+              multiPage ? `Page ${pageIndex + 1} of ${pages.length}` : undefined
+            }
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+interface InvoiceSheetProps {
+  company: InvoiceMeta['company'];
+  invoiceNumber: string;
+  customerName: string;
+  address: string;
+  lpoNo: string;
+  date: string;
+  pageItems: InvoiceItem[];
+  total: number;
+  showTotals: boolean;
+  showTotalStamp: boolean;
+  showPto: boolean;
+  pageLabel?: string;
+}
+
+function InvoiceSheet({
+  company,
+  invoiceNumber,
+  customerName,
+  address,
+  lpoNo,
+  date,
+  pageItems,
+  total,
+  showTotals,
+  showTotalStamp,
+  showPto,
+  pageLabel,
+}: InvoiceSheetProps) {
+  const rows = padItems(pageItems);
   const { whole: totalWhole, cents: totalCents } = splitAmount(total);
 
   return (
-    <article className="invoice-sheet relative mx-auto w-full max-w-[720px] bg-[#f7f3e8] px-4 py-5 text-black shadow-[0_8px_30px_rgba(0,0,0,0.12)] sm:px-8 sm:py-6">
-      <header className=" pb-2 text-center">
+    <article className="invoice-sheet relative w-full bg-[#f7f3e8] px-4 py-5 text-black shadow-[0_8px_30px_rgba(0,0,0,0.12)] sm:px-8 sm:py-6">
+      <header className="pb-2 text-center">
         <h1 className="font-invoice text-[1.55rem] font-bold tracking-wide sm:text-[1.85rem]">
           {company.name}
         </h1>
@@ -56,7 +127,7 @@ export function InvoiceDocument({
       </header>
 
       <div className="relative mt-3">
-        <h2 className="text-center font-invoice text-2xl underline font-bold tracking-[0.2em] sm:text-3xl">
+        <h2 className="text-center font-invoice text-2xl font-bold underline tracking-[0.2em] sm:text-3xl">
           INVOICE
         </h2>
         <div className="mt-1 flex items-baseline justify-center gap-1 font-invoice text-sm sm:absolute sm:right-0 sm:bottom-0 sm:mt-0">
@@ -66,6 +137,12 @@ export function InvoiceDocument({
           </span>
         </div>
       </div>
+
+      {pageLabel && (
+        <p className="mt-1 text-center font-invoice text-[0.65rem] text-black/60">
+          {pageLabel}
+        </p>
+      )}
 
       <div className="mt-4 space-y-2 font-invoice text-sm">
         <FieldLine label="Customer's Name" value={customerName} />
@@ -141,7 +218,7 @@ export function InvoiceDocument({
 
         {showTotalStamp && total > 0 && (
           <div
-            className="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rotate-[-18deg]"
+            className="pointer-events-none absolute top-4/5 left-1/3 z-10 -translate-x-1/2 -translate-y-1/2 rotate-[-18deg]"
             aria-hidden
           >
             <div className="rounded-[50%] border-[3px] border-[#1a3a8a]/40 px-5 py-6 font-ink text-lg font-semibold text-[#1a3a8a]/80 sm:text-xl">
@@ -151,44 +228,57 @@ export function InvoiceDocument({
         )}
       </div>
 
-      <div className="mt-3 flex items-end justify-between gap-4">
-        <p className="font-invoice text-xs italic sm:text-sm">
-          Goods sold out are not returnable
-        </p>
-        <div className="flex items-stretch border-2 border-black">
-          <div className="flex items-center border-r-2 border-black bg-[#f0ebe0] px-3 font-invoice text-sm font-bold">
-            TOTAL ₵
+      {showTotals ? (
+        <>
+          <div className="mt-3 flex items-end justify-between gap-4">
+            <p className="font-invoice text-xs italic sm:text-sm">
+              Goods sold out are not returnable
+            </p>
+            <div className="flex items-stretch border-2 border-black">
+              <div className="flex items-center border-r-2 border-black bg-[#f0ebe0] px-3 font-invoice text-sm font-bold">
+                TOTAL ₵
+              </div>
+              <div className="flex min-w-36">
+                <span className="flex-1 border-r border-double border-black bg-[#eceae0] px-2 py-1.5 text-right font-ink text-3xl text-[#1a3a8a]">
+                  {total > 0 ? totalWhole : ''}
+                </span>
+                <span className="w-10 bg-[#eceae0] px-1 py-1.5 text-center font-ink text-3xl text-[#1a3a8a]">
+                  {total > 0 ? totalCents : ''}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex min-w-36">
-            <span className="flex-1 border-r border-double border-black bg-[#eceae0] px-2 py-1.5 text-right font-ink text-base text-[#1a3a8a]">
-              {total > 0 ? totalWhole : ''}
-            </span>
-            <span className="w-10 bg-[#eceae0] px-1 py-1.5 text-center font-ink text-base text-[#1a3a8a]">
-              {total > 0 ? totalCents : ''}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      <div className="mt-2 md:mt-8 grid grid-cols-2 gap-6 font-invoice text-xs sm:gap-8 sm:text-sm">
-        <div className="flex flex-col">
-          <div className="relative flex h-14 items-end sm:h-16">
-            <div className="w-full border-b border-dotted border-black" />
+          <div className="mt-2 grid grid-cols-2 gap-6 font-invoice text-xs md:mt-8 sm:gap-8 sm:text-sm">
+            <div className="flex flex-col">
+              <div className="relative flex h-14 items-end sm:h-16">
+                <div className="w-full border-b border-dotted border-black" />
+              </div>
+              <p className="mt-1 text-center text-xs">Customers&apos; Signature</p>
+            </div>
+            <div className="flex flex-col">
+              <div className="relative flex h-14 items-end sm:h-16">
+                <img
+                  src={marySign}
+                  alt="Manager signature"
+                  className="pointer-events-none absolute bottom-0.5 left-20 h-10 w-auto max-w-full object-contain object-bottom-left sm:h-12"
+                />
+                <div className="w-full border-b border-dotted border-black" />
+              </div>
+              <p className="mt-1 text-center text-xs">Managers&apos; Signature</p>
+            </div>
           </div>
-          <p className="mt-1 text-center text-xs">Customers&apos; Signature</p>
+        </>
+      ) : showPto ? (
+        <div className="mt-6 flex flex-col items-end gap-1">
+          <p className="font-invoice text-base font-bold tracking-[0.25em] sm:text-lg">
+            P.T.O.
+          </p>
+          <p className="font-invoice text-[0.65rem] italic text-black/60">
+            Please turn over
+          </p>
         </div>
-        <div className="flex flex-col">
-          <div className="relative flex h-14 items-end sm:h-16">
-            <img
-              src={marySign}
-              alt="Manager signature"
-              className="pointer-events-none absolute bottom-0.5 left-20 h-10 w-auto max-w-full object-contain object-bottom-left sm:h-12"
-            />
-            <div className="w-full border-b border-dotted border-black" />
-          </div>
-          <p className="mt-1 text-center text-xs">Managers&apos; Signature</p>
-        </div>
-      </div>
+      ) : null}
     </article>
   );
 }
@@ -197,7 +287,7 @@ function FieldLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-end gap-2">
       <span className="shrink-0">{label}</span>
-      <span className="min-h-5 flex-1 border-b border-dotted border-black px-1 text-3xl font-ink text-[#1a3a8a]">
+      <span className="min-h-5 flex-1 border-b border-dotted border-black px-1 font-ink text-3xl text-[#1a3a8a]">
         {value || '\u00a0'}
       </span>
     </div>

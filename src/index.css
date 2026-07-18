@@ -42,6 +42,13 @@ body {
   .invoice-sheet {
     box-shadow: none !important;
     max-width: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .invoice-sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
   }
 
   .print\:hidden {
