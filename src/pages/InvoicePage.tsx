@@ -72,7 +72,7 @@ export function InvoicePage() {
           setError(
             err instanceof Error
               ? err.message
-              : 'Could not load invoices. Run the app with npm run dev.'
+              : 'Could not load invoices. Start the API with npm run api (or use npm run dev).'
           );
         }
       } finally {
@@ -293,7 +293,7 @@ export function InvoicePage() {
               {formatDisplayDate(selectedDay)}
               {days.length > 0 && (
                 <span className="block mt-0.5">
-                  Stored under <code className="text-[0.7rem]">src/data/invoices/{selectedDay}.json</code>
+                  Stored under <code className="text-[0.7rem]">server/data/invoices/{selectedDay}.json</code>
                 </span>
               )}
             </p>
