@@ -73,7 +73,7 @@ export function InvoiceDocument({
           <FieldLine label="Address" value={address} />
           <div className="flex min-w-36 items-end gap-2">
             <span className="shrink-0">Date</span>
-            <span className="flex-1 border-b border-dotted border-black px-1 font-ink text-base text-[#1a3a8a]">
+            <span className="flex-1 border-b border-dotted border-black px-1 font-ink text-3xl text-[#1a3a8a]">
               {date ? formatDisplayDate(date) : '\u00a0'}
             </span>
           </div>
@@ -115,7 +115,7 @@ export function InvoiceDocument({
               const hasAmount = item && item.amount > 0;
               const parts = hasAmount ? splitAmount(item.amount) : null;
               return (
-                <tr key={i} className="border-b border-dotted border-black/70">
+                <tr key={i} className="border-b border-dotted border-black/70 text-3xl">
                   <td className="h-7 border-r border-black px-1 text-center font-ink text-[#1a3a8a]">
                     {item?.qty || ''}
                   </td>
@@ -170,7 +170,7 @@ export function InvoiceDocument({
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-6 font-invoice text-xs sm:gap-8 sm:text-sm">
+      <div className="mt-2 md:mt-8 grid grid-cols-2 gap-6 font-invoice text-xs sm:gap-8 sm:text-sm">
         <div className="flex flex-col">
           <div className="relative flex h-14 items-end sm:h-16">
             <div className="w-full border-b border-dotted border-black" />
@@ -197,7 +197,7 @@ function FieldLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-end gap-2">
       <span className="shrink-0">{label}</span>
-      <span className="min-h-5 flex-1 border-b border-dotted border-black px-1 font-ink text-base text-[#1a3a8a]">
+      <span className="min-h-5 flex-1 border-b border-dotted border-black px-1 text-3xl font-ink text-[#1a3a8a]">
         {value || '\u00a0'}
       </span>
     </div>
