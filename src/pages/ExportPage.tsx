@@ -98,7 +98,7 @@ export function ExportPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Filter by name, town, or ID..."
-          className="min-w-[200px] flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+          className="min-w-50 flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
         />
         <button
           type="button"
@@ -121,7 +121,7 @@ export function ExportPage() {
       ) : (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left text-sm">
+            <table className="w-full min-w-150 text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50">
                 <tr>
                   <th className="p-3 font-medium text-slate-600">Image</th>

@@ -15,6 +15,7 @@ export interface Invoice {
   items: InvoiceItem[];
   total: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface DayInvoices {

@@ -15,6 +15,7 @@
  *   GET    /api/invoices/day/:date
  *   POST   /api/invoices
  *   PUT    /api/invoices/meta
+ *   PUT    /api/invoices/day/:date/:id
  *   DELETE /api/invoices/day/:date/:id
  */
 
@@ -205,6 +206,57 @@ export async function handleInvoicesRequest(req, res) {
     const deleteMatch = url.match(
       /^\/api\/invoices\/day\/(\d{4}-\d{2}-\d{2})\/([^/]+)$/
     );
+    if (req.method === 'PUT' && deleteMatch) {
+      const date = deleteMatch[1];
+      const id = deleteMatch[2];
+      const raw = await readBody(req);
+      const payload = JSON.parse(raw || '{}');
+      const day = readDay(date);
+      const index = day.invoices.findIndex((inv) => inv.id === id);
+      if (index < 0) {
+        sendJson(res, 404, { error: 'Invoice not found' });
+        return true;
+      }
+
+      const existing = day.invoices[index];
+      const items = (payload.items || [])
+        .filter((i) => i.description?.trim())
+        .map((i) => ({
+          qty: i.qty ?? '',
+          description: i.description.trim(),
+          unitPrice: i.unitPrice ?? null,
+          amount: Number(i.amount) || 0,
+        }));
+
+      if (items.length === 0) {
+        sendJson(res, 400, { error: 'Add at least one line item' });
+        return true;
+      }
+
+      const updated = {
+        ...existing,
+        // customerName and date stay locked
+        customerName: existing.customerName,
+        date: existing.date,
+        address:
+          payload.address !== undefined
+            ? String(payload.address).trim()
+            : existing.address,
+        lpoNo:
+          payload.lpoNo !== undefined
+            ? String(payload.lpoNo).trim()
+            : existing.lpoNo,
+        items,
+        total: items.reduce((s, i) => s + i.amount, 0),
+        updatedAt: new Date().toISOString(),
+      };
+
+      day.invoices[index] = updated;
+      writeDay(date, day);
+      sendJson(res, 200, updated);
+      return true;
+    }
+
     if (req.method === 'DELETE' && deleteMatch) {
       const date = deleteMatch[1];
       const id = deleteMatch[2];

@@ -28,7 +28,7 @@ import {
 } from '../types/invoice';
 import { shareInvoiceImageToWhatsApp } from '../utils/whatsappInvoice';
 
-type Mode = 'create' | 'view';
+type Mode = 'create' | 'view' | 'edit';
 
 export function InvoicePage() {
   const [meta, setMeta] = useState<InvoiceMeta | null>(null);
@@ -116,17 +116,47 @@ export function InvoicePage() {
     }));
   };
 
+  const moveItem = (index: number, direction: -1 | 1) => {
+    setDraft((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.items.length) return prev;
+      const items = [...prev.items];
+      const [row] = items.splice(index, 1);
+      items.splice(target, 0, row!);
+      return { ...prev, items };
+    });
+  };
+
   const startNew = () => {
     setMode('create');
     setActive(null);
     setDraft(blankDraft(new Date(selectedDay + 'T12:00:00')));
     setStatus('');
+    setError('');
   };
 
   const openFromHistory = (invoice: Invoice) => {
     setMode('view');
     setActive(invoice);
     setStatus('');
+    setError('');
+  };
+
+  const startEdit = (invoice: Invoice) => {
+    setActive(invoice);
+    setMode('edit');
+    setDraft({
+      customerName: invoice.customerName,
+      address: invoice.address,
+      lpoNo: invoice.lpoNo,
+      date: invoice.date,
+      items:
+        invoice.items.length > 0
+          ? invoice.items.map((item) => ({ ...item }))
+          : [EMPTY_ITEM()],
+    });
+    setStatus('');
+    setError('');
   };
 
   const handleSave = async () => {
@@ -142,6 +172,7 @@ export function InvoicePage() {
     try {
       setSaving(true);
       setError('');
+      const fromNumber = mode === 'edit' ? active?.invoiceNumber : undefined;
       const saved = await createInvoice({ ...draft, items });
       setActive(saved);
       setMode('view');
@@ -149,7 +180,11 @@ export function InvoicePage() {
       await Promise.all([refreshDays(), loadDay(saved.date)]);
       const m = await fetchInvoiceMeta();
       setMeta(m);
-      setStatus(`Saved invoice № ${saved.invoiceNumber}`);
+      setStatus(
+        fromNumber
+          ? `Saved as new invoice № ${saved.invoiceNumber} (from № ${fromNumber})`
+          : `Saved invoice № ${saved.invoiceNumber}`
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
@@ -321,6 +356,13 @@ export function InvoicePage() {
                     <div className="mt-1 flex justify-end gap-2">
                       <button
                         type="button"
+                        onClick={() => startEdit(inv)}
+                        className="text-xs text-slate-700 hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
                         disabled={sharing}
                         onClick={() => handleWhatsApp(inv)}
                         className="text-xs text-teal-700 hover:underline disabled:opacity-50"
@@ -366,11 +408,17 @@ export function InvoicePage() {
 
         {/* Main: form + preview */}
         <div className="order-1 space-y-6 lg:order-0">
-          {mode === 'create' && (
+          {(mode === 'create' || mode === 'edit') && (
             <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm print:hidden sm:p-6">
-              <h2 className="text-lg font-semibold text-slate-900">Create invoice</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                {mode === 'edit'
+                  ? `Edit from invoice № ${active?.invoiceNumber ?? ''}`
+                  : 'Create invoice'}
+              </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Next number: № {nextNumber}. Saved into today&apos;s JSON file when you save.
+                {mode === 'edit'
+                  ? `Customer name and date stay fixed. Saving creates a new invoice (next № ${nextNumber}).`
+                  : `Next number: № ${nextNumber}. Saved into today's JSON file when you save.`}
               </p>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -380,7 +428,12 @@ export function InvoicePage() {
                     value={draft.customerName}
                     onChange={(e) => setDraft({ ...draft, customerName: e.target.value })}
                     placeholder="e.g. RAV4 Hybrid"
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    readOnly={mode === 'edit'}
+                    className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 ${
+                      mode === 'edit'
+                        ? 'cursor-not-allowed bg-slate-100 text-slate-600'
+                        : ''
+                    }`}
                   />
                 </label>
                 <label className="block text-sm font-medium text-slate-700">
@@ -398,7 +451,12 @@ export function InvoicePage() {
                     type="date"
                     value={draft.date}
                     onChange={(e) => setDraft({ ...draft, date: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    disabled={mode === 'edit'}
+                    className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 ${
+                      mode === 'edit'
+                        ? 'cursor-not-allowed bg-slate-100 text-slate-600'
+                        : ''
+                    }`}
                   />
                 </label>
                 <label className="block text-sm font-medium text-slate-700 sm:col-span-2">
@@ -435,14 +493,37 @@ export function InvoicePage() {
                           placeholder="Description of goods"
                           className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none sm:order-2"
                         />
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="shrink-0 rounded-lg px-2 py-2 text-slate-400 hover:bg-red-50 hover:text-red-600 sm:order-5 sm:justify-self-center"
-                          aria-label="Remove line"
-                        >
-                          ×
-                        </button>
+                        <div className="flex shrink-0 items-center gap-0.5 sm:order-5">
+                          <button
+                            type="button"
+                            onClick={() => moveItem(index, -1)}
+                            disabled={index === 0}
+                            className="rounded-lg px-1.5 py-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
+                            aria-label="Move line up"
+                            title="Move up"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveItem(index, 1)}
+                            disabled={index === draft.items.length - 1}
+                            className="rounded-lg px-1.5 py-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
+                            aria-label="Move line down"
+                            title="Move down"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(index)}
+                            className="rounded-lg px-2 py-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                            aria-label="Remove line"
+                            title="Remove"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
                       <div className="mt-2 grid grid-cols-3 gap-2 sm:contents sm:mt-0">
                         <input
@@ -491,8 +572,22 @@ export function InvoicePage() {
                   disabled={saving}
                   className="w-full rounded-lg bg-teal-600 px-5 py-2.5 font-medium text-white hover:bg-teal-700 disabled:opacity-50 sm:w-auto"
                 >
-                  {saving ? 'Saving…' : 'Save invoice'}
+                  {saving
+                    ? 'Saving…'
+                    : mode === 'edit'
+                      ? 'Save as new invoice'
+                      : 'Save invoice'}
                 </button>
+                {mode === 'edit' && active && (
+                  <button
+                    type="button"
+                    onClick={() => openFromHistory(active)}
+                    disabled={saving}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-5 py-2.5 font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 sm:w-auto"
+                  >
+                    Cancel
+                  </button>
+                )}
               </div>
             </section>
           )}
@@ -508,6 +603,13 @@ export function InvoicePage() {
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:flex sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => startEdit(active)}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Edit items
+                </button>
                 <button
                   type="button"
                   onClick={() => handleWhatsApp()}
