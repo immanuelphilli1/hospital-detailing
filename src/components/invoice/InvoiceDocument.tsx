@@ -222,7 +222,7 @@ function InvoiceSheet({
 
         {showTotalStamp && hasNonZeroAmount(total) && (
           <div
-            className="pointer-events-none absolute top-4/5 left-1/3 z-10 -translate-x-1/2 -translate-y-1/2 rotate-[-18deg]"
+            className="pointer-events-none absolute top-4/5 left-2/3 z-10 -translate-x-1/2 -translate-y-1/2 rotate-[-18deg]"
             aria-hidden
           >
             <div className="rounded-[50%] border-[3px] border-[#1a3a8a]/40 px-5 py-6 font-ink text-lg font-semibold text-[#1a3a8a]/80 sm:text-xl">
