@@ -274,7 +274,7 @@ export function InvoicePage() {
             date: draft.date,
             items: previewItems,
             total: previewTotal,
-            showTotalStamp: previewTotal > 0,
+            showTotalStamp: previewTotal !== 0,
           }
         : null;
 
@@ -547,13 +547,20 @@ export function InvoicePage() {
                         />
                         <input
                           type="number"
-                          min={0}
                           step="0.01"
-                          value={item.amount || ''}
-                          onChange={(e) =>
-                            updateItem(index, { amount: Number(e.target.value) || 0 })
-                          }
-                          placeholder="Amount ₵"
+                          value={item.amount === 0 ? '' : item.amount}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '' || raw === '-') {
+                              updateItem(index, { amount: 0 });
+                              return;
+                            }
+                            const next = Number(raw);
+                            updateItem(index, {
+                              amount: Number.isFinite(next) ? next : 0,
+                            });
+                          }}
+                          placeholder="Amount (±)"
                           className="rounded-lg border border-slate-300 px-2 py-2 text-sm focus:border-teal-500 focus:outline-none sm:order-4"
                         />
                       </div>

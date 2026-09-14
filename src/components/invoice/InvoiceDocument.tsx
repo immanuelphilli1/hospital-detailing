@@ -10,6 +10,10 @@ function splitAmount(amount: number): { whole: string; cents: string } {
   return { whole: whole ?? '0', cents };
 }
 
+function hasNonZeroAmount(amount: number | null | undefined): boolean {
+  return typeof amount === 'number' && Number.isFinite(amount) && amount !== 0;
+}
+
 function padItems(items: InvoiceItem[]): Array<InvoiceItem | null> {
   const rows: Array<InvoiceItem | null> = [...items];
   while (rows.length < ROW_COUNT) rows.push(null);
@@ -189,7 +193,7 @@ function InvoiceSheet({
           </thead>
           <tbody>
             {rows.map((item, i) => {
-              const hasAmount = item && item.amount > 0;
+              const hasAmount = item != null && hasNonZeroAmount(item.amount);
               const parts = hasAmount ? splitAmount(item.amount) : null;
               return (
                 <tr key={i} className="border-b border-dotted border-black/70 text-3xl">
@@ -216,7 +220,7 @@ function InvoiceSheet({
           </tbody>
         </table>
 
-        {showTotalStamp && total > 0 && (
+        {showTotalStamp && hasNonZeroAmount(total) && (
           <div
             className="pointer-events-none absolute top-4/5 left-1/3 z-10 -translate-x-1/2 -translate-y-1/2 rotate-[-18deg]"
             aria-hidden
@@ -240,10 +244,10 @@ function InvoiceSheet({
               </div>
               <div className="flex min-w-36">
                 <span className="flex-1 border-r border-double border-black bg-[#eceae0] px-2 py-1.5 text-right font-ink text-3xl text-[#1a3a8a]">
-                  {total > 0 ? totalWhole : ''}
+                  {totalWhole}
                 </span>
                 <span className="w-10 bg-[#eceae0] px-1 py-1.5 text-center font-ink text-3xl text-[#1a3a8a]">
-                  {total > 0 ? totalCents : ''}
+                  {totalCents}
                 </span>
               </div>
             </div>
