@@ -2,7 +2,7 @@ import marySign from '../../assets/mary-sign.svg';
 import type { Invoice, InvoiceItem, InvoiceMeta } from '../../types/invoice';
 import { formatCedi, formatDisplayDate } from '../../types/invoice';
 
-const ROW_COUNT = 12;
+const ROW_COUNT = 13;
 
 function splitAmount(amount: number): { whole: string; cents: string } {
   const formatted = formatCedi(amount);
@@ -58,7 +58,7 @@ export function InvoiceDocument({
   const multiPage = pages.length > 1;
 
   return (
-    <div className="invoice-document mx-auto flex w-full max-w-[720px] flex-col gap-6">
+    <div className="invoice-document mx-auto flex w-full max-w-180 flex-col gap-6">
       {pages.map((pageItems, pageIndex) => {
         const isLast = pageIndex === pages.length - 1;
         return (
@@ -163,7 +163,7 @@ function InvoiceSheet({
       </div>
 
       <div className="relative mt-4 overflow-x-auto">
-        <table className="w-full min-w-[560px] border-collapse border border-black font-invoice text-sm">
+        <table className="w-full min-w-140 border-collapse border border-black font-invoice text-sm">
           <thead>
             <tr className="border-b border-black">
               <th className="w-14 border-r border-black px-1 py-1.5 text-center font-semibold">
